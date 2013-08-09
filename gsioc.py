@@ -60,6 +60,8 @@ class gsioc:
                 resp[len(resp)-1] -= 128
                 print(str(datetime.datetime.now()) + " -- Immediate response complete")
                 break
+            else :
+                s.write(bytes.fromhex("06"))
         return resp
 
     
