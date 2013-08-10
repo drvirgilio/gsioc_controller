@@ -1,9 +1,7 @@
 # gsioc defines a class used for controlling gsioc devices
 # ID is an integer
-# immediate commands are encoded as a hex string
-#   e.g. commandhex = '0b' corresponds to 11 in base 10
+# immediate commands are an ascii string
 # buffered commands are an ascii string
-# The commands
 
 import datetime, time
 import serial
@@ -19,9 +17,9 @@ class gsioc:
         # Initiate serial connection
         s = serial.Serial(port)
         #s = serial.serial_for_url("loop://")  # loop for testing
-        s.baudrate = 19200
+        s.baudrate = 9600
         s.bytesize = 8
-        s.parity = serial.PARITY_EVEN
+        s.parity = serial.PARITY_NONE
         s.stopbits = 1
         s.timeout = timeout
         self.serial = s
@@ -39,19 +37,21 @@ class gsioc:
             raise Exception("ID out of range [0,63]")
         ID += 128
         s = self.serial
+        s.flushInput()
         s.write(bytes.fromhex('ff'))   
         time.sleep(self.timeout)   # Passively wait for all devices to disconnect
         s.write(ID.to_bytes(1,byteorder='big'))
         resp = s.read(1)    # Will raise serialTimoutException after timeout
-        print(str(datetime.datetime.now()) + " -- Connected to device ", ID)
+        print(str(datetime.datetime.now()) + " -- Connected to device ", ID-128)
 
     # returns byte array
     # Use str(resp,'ascii') or resp.decode('ascii') to get ascii string
-    def iCommand(self,commandhex):
-        command = bytes.fromhex(commandhex)
+    def iCommand(self,commandstring):
+        command = binascii.a2b_qp(commandstring)
         if(command[0] not in range(0,255)):     # Change this to correct range
             raise Exception("Command out of range")
         s = self.serial
+        s.flushInput()
         s.write(command[0:1])
         resp = bytearray(0)
         while(True):
@@ -60,20 +60,20 @@ class gsioc:
                 resp[len(resp)-1] -= 128
                 print(str(datetime.datetime.now()) + " -- Immediate response complete")
                 break
-            else :
+            else:
                 s.write(bytes.fromhex("06"))
-        return resp
-
-    
+        return resp.decode("ascii")
+        
     def bCommand(self,commandstring):
         data = binascii.a2b_qp("\n" + commandstring + "\r")
         s = self.serial
+        s.flushInput()
         s.write(data[0:1])    # send line feed
         resp = bytearray(0)
         resp.append(s.read(1)[0])
-        if(resp[0] != 13):
+        if(resp[0] != 10):
             print(resp)
-            raise Exception("Did not recieve \\r (0x0D) as response")
+            raise Exception("Did not recieve \\n (0x0A) as response")
         for i in range(1,len(data)):
             s.write(data[i:i+1])
             resp.append(s.read(1)[0])
@@ -83,5 +83,6 @@ class gsioc:
                 print(str(datetime.datetime.now()) + " -- Buffered command complete")
                 return resp
         print(str(datetime.datetime.now()) + " -- Buffered command FAILED")
-        return resp
+        resp_no_whitespace = resp[1:len(resp)-2]
+        return resp_no_whitespace.decode("ascii")
 
