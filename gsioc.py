@@ -70,16 +70,20 @@ class gsioc:
         s.flushInput()
 
         # begin buffered command by sending \n until the device echos \n or times out
-        # start time
-        startTime = time.time()
+        firstErrorPrinted = False # This is used to prevent repetitive printing 
         # begin loop
         while(true):
             s.write(data[0:1])    # send line feed
             readySig = s.read(1)[0]
-            if(readySig == 10) break
-            if(time.time()-startTime > self.timeout):
-                print(readySig)
-                raise Exception("Did not recieve \\n (0x0A) as response")
+            if(readySig == 10):
+                print(str(datetime.datetime.now()) + " -- Starting Buffered command")
+                break
+            elif(readySig == 35):
+                if(not firstErrorPrinted):
+                    print("Device busy")
+                    firstErrorPrinted = True
+            else:
+                raise Exception("Did not recieve \\n (0x0A) or # as response")
         resp.append(readySig)
 
         # Send buffered data
