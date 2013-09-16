@@ -80,7 +80,7 @@ class gsioc:
                 break
             elif(readySig == 35):
                 if(not firstErrorPrinted):
-                    print("Device busy")
+                    print("Device busy. Waiting...")
                     firstErrorPrinted = True
             else:
                 raise Exception("Did not recieve \\n (0x0A) or # as response")
