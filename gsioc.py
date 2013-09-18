@@ -68,11 +68,12 @@ class gsioc:
         data = binascii.a2b_qp("\n" + commandstring + "\r")
         s = self.serial
         s.flushInput()
+        resp = bytearray(0)
 
         # begin buffered command by sending \n until the device echos \n or times out
         firstErrorPrinted = False # This is used to prevent repetitive printing 
         # begin loop
-        while(true):
+        while(True):
             s.write(data[0:1])    # send line feed
             readySig = s.read(1)[0]
             if(readySig == 10):
