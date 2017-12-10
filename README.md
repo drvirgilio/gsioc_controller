@@ -4,6 +4,7 @@ gsioc_controller
 Gilson GSIOC communication protocol written in python.
 
 Requires pyserial.
+Requires python 3.
 
 Example instantiation:
 
