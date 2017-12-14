@@ -11,13 +11,14 @@ class gsioc:
     def __init__(self,serial=None):
         self.serial = serial
 
-    def createSerial(self,port=0,timeout=0.1):
+    def createSerial(self,port=0,timeout=0.1,baudrate=9600):
         self.port = port
         self.timeout = timeout
+        self.baudrate = baudrate
         # Initiate serial connection
         s = serial.Serial(port)
         #s = serial.serial_for_url("loop://")  # loop for testing
-        s.baudrate = 9600
+        s.baudrate = baudrate
         s.bytesize = 8
         s.parity = serial.PARITY_NONE
         s.stopbits = 1
